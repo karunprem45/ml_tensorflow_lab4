@@ -2,7 +2,7 @@
 
 Karuniya Premnath, IE 7374 MLOps
 
-![Unit tests](https://github.com/karunprem45/Fourth_lab/actions/workflows/tests.yml/badge.svg)
+![Unit tests](https://github.com/karunprem45/ml_tensorflow_lab4/actions/workflows/tests.yml/badge.svg)
 
 This lab is based on `Labs/Tensorflow_Labs/TensorBoard/Lab1.ipynb` from [raminmohammadi/MLOps](https://github.com/raminmohammadi/MLOps).
 The original trains a one-layer model on 1,000 made-up points and shows the loss in TensorBoard.
