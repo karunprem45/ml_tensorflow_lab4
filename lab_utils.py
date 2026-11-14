@@ -102,10 +102,9 @@ def build_model(n_features, n_classes, optimizer_name="adam", lr=1e-3):
 def current_lr(model):
     """Read the optimizer's learning rate as a float (works on Keras 2 and Keras 3)."""
     lr = model.optimizer.learning_rate
-    try:
-        return float(np.array(lr))
-    except (TypeError, ValueError):
+    if hasattr(lr, "numpy"):
         return float(lr.numpy())
+    return float(lr)
 
 
 def make_custom_scalars_callback(logdir, X_val, y_val):
