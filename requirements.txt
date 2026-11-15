@@ -1,7 +1,10 @@
-tensorflow>=2.15
-tensorboard>=2.15
-scikit-learn>=1.3
-numpy
-pandas
-matplotlib
-pytest
+# Exact versions used for the saved notebook run, tested in CI on Python 3.11 and 3.13.
+# Pinned so a later install gets exactly the same libraries.
+tensorflow==2.21.0
+tensorboard==2.21.0
+keras==3.15.1
+scikit-learn==1.9.1
+numpy==2.4.6
+pandas==3.1.1
+matplotlib==3.11.2
+pytest==9.2.0
