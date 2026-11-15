@@ -9,6 +9,12 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.13 is the Python version Google Colab uses
+        python-version: ["3.11", "3.13"]
+    name: Unit tests (Python ${{ matrix.python-version }})
     steps:
       - name: Check out code
         uses: actions/checkout@v5
@@ -16,7 +22,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
           cache: pip
 
       - name: Install dependencies

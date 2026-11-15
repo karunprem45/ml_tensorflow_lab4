@@ -3,6 +3,8 @@
 Karuniya Premnath, IE 7374 MLOps
 
 ![Unit tests](https://github.com/karunprem45/ml_tensorflow_lab4/actions/workflows/tests.yml/badge.svg)
+![Notebook end-to-end run](https://github.com/karunprem45/ml_tensorflow_lab4/actions/workflows/notebook.yml/badge.svg)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/karunprem45/ml_tensorflow_lab4/blob/main/Lab4_TensorBoard.ipynb)
 
 This lab is based on `Labs/Tensorflow_Labs/TensorBoard/Lab1.ipynb` from [raminmohammadi/MLOps](https://github.com/raminmohammadi/MLOps).
 The original trains a one-layer model on 1,000 made-up points and shows the loss in TensorBoard.
@@ -30,7 +32,7 @@ I use a stratified sample of 20,000 rows so everything runs in about 10 minutes 
 | Images | Not used | Test-set confusion matrix logged to the Images tab |
 | Debugger | Turned on, but the model trains fine so there is nothing to see | Separate run on unscaled data with a high learning rate (0.5), so the loss goes to NaN and Debugger V2 shows alerts |
 | Code structure | Everything in the notebook | Helper functions in `lab_utils.py` |
-| Testing | None | 11 unit tests in `tests/`, run by GitHub Actions on every push and inside the notebook |
+| Testing | None | 11 unit tests in `tests/`, run by GitHub Actions on Python 3.11 and 3.13 and inside the notebook, plus a CI job that runs the whole notebook |
 
 ## How the best model is picked
 
@@ -41,7 +43,7 @@ I use a stratified sample of 20,000 rows so everything runs in about 10 minutes 
 
 ## How to run
 
-1. Open `Lab4_TensorBoard.ipynb` in Google Colab.
+1. Click the **Open in Colab** badge at the top. It always opens the latest notebook from this repo.
 2. Click Runtime > Run all. The first cell clones this repo to get `lab_utils.py` and the tests.
 3. TensorBoard opens in the second-to-last cell. Debugger V2 opens in the last cell, in its own TensorBoard pointed at `logs/debugger`, because Debugger V2 only reads debugger data that sits directly in `--logdir`.
 
@@ -54,7 +56,7 @@ pytest -v tests/
 
 ## Results
 
-Numbers from my run (TensorFlow 2.21, seed 42). The notebook is saved with its outputs, so the same numbers are in sections 4 and 5.
+Numbers from the run saved in the notebook (TensorFlow 2.21, seed 42), so the same numbers are in sections 4 and 5. A fresh run on Colab can differ in the third decimal place, because GPU/CPU kernels and library versions are not bit-for-bit identical, but the ranking of the three configs stays the same.
 
 **Cross-validation (3 folds, training set only)**
 
@@ -113,5 +115,6 @@ The test macro F1 (0.6577) is close to the CV estimate (0.6485), so the CV score
 - `lab_utils.py` - data, model, selection and plotting helpers
 - `tests/test_lab_utils.py` - unit tests
 - `requirements.txt` - Python packages
-- `.github/workflows/tests.yml` - GitHub Actions workflow that runs the tests
+- `.github/workflows/tests.yml` - runs the unit tests on Python 3.11 and 3.13 (the version Colab uses) on every push
+- `.github/workflows/notebook.yml` - runs the whole notebook top to bottom on Python 3.13 and checks the results, the NaN debugger run and the in-notebook tests; the executed notebook and TensorBoard logs are saved as a download
 - `screenshots/` - TensorBoard screenshots from my run (the numbers above come from the same run)
