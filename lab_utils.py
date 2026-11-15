@@ -66,6 +66,32 @@ def macro_f1(y_true, probs):
     return float(f1_score(y_true, np.asarray(probs).argmax(axis=1), average="macro"))
 
 
+def balanced_class_weights(y, n_classes, power=1.0):
+    """Class weights for Keras' class_weight argument: (n_samples / (n_classes * count)) ** power.
+
+    With power=1 this is scikit-learn's "balanced" formula: every class contributes the same
+    total weight to the loss. power=0.5 ("sqrt") is a milder version that still boosts rare
+    classes but much less. A class that is missing from y gets weight 1.0.
+    """
+    y = np.asarray(y)
+    counts = np.bincount(y, minlength=n_classes)
+    return {
+        c: float((len(y) / (n_classes * counts[c])) ** power) if counts[c] else 1.0
+        for c in range(n_classes)
+    }
+
+
+CLASS_WEIGHT_POWERS = {"none": None, "sqrt": 0.5, "balanced": 1.0}
+
+
+def class_weights_for(setting, y, n_classes):
+    """Turn a config's class-weight setting ("none", "sqrt" or "balanced") into weights."""
+    if setting not in CLASS_WEIGHT_POWERS:
+        raise ValueError(f"unknown class weight setting: {setting}")
+    power = CLASS_WEIGHT_POWERS[setting]
+    return None if power is None else balanced_class_weights(y, n_classes, power)
+
+
 def select_best(cv_results, metric="cv_macro_f1"):
     """Pick the config with the highest mean cross-validation score.
 
@@ -109,7 +135,8 @@ def current_lr(model):
 
 def make_custom_scalars_callback(logdir, X_val, y_val):
     """Callback that writes two extra scalars to TensorBoard after every epoch:
-    the current learning rate and validation macro F1."""
+    the current learning rate and validation macro F1. Both are shown on the
+    Custom Scalars dashboard (see custom_scalars_layout)."""
     import tensorflow as tf
     from tensorflow import keras
 
@@ -126,6 +153,53 @@ def make_custom_scalars_callback(logdir, X_val, y_val):
             self.writer.flush()
 
     return CustomScalars()
+
+
+# ---------- Custom Scalars dashboard ----------
+
+# Tags written during training, and the Custom Scalars chart each one goes in.
+# epoch_loss / epoch_accuracy come from the Keras TensorBoard callback,
+# learning_rate / val_macro_f1 come from make_custom_scalars_callback.
+CUSTOM_SCALAR_CHARTS = {
+    "Training health": {
+        "Loss (train and validation)": r"^epoch_loss$",
+        "Learning rate": r"^learning_rate$",
+    },
+    "Model quality": {
+        "Validation macro F1": r"^val_macro_f1$",
+        "Accuracy (train and validation)": r"^epoch_accuracy$",
+    },
+}
+
+
+def custom_scalars_layout(charts=CUSTOM_SCALAR_CHARTS):
+    """Build the layout for TensorBoard's Custom Scalars dashboard.
+
+    Each chart is a multiline chart that collects one tag from every run, so all
+    configs and folds can be compared on the same axes.
+    """
+    from tensorboard.plugins.custom_scalar import layout_pb2
+
+    return layout_pb2.Layout(category=[
+        layout_pb2.Category(title=category, chart=[
+            layout_pb2.Chart(title=title, multiline=layout_pb2.MultilineChartContent(tag=[regex]))
+            for title, regex in chart_map.items()
+        ])
+        for category, chart_map in charts.items()
+    ])
+
+
+def write_custom_scalars_layout(logdir):
+    """Write the Custom Scalars layout once, at the top of the log folder."""
+    import tensorflow as tf
+    from tensorboard.plugins.custom_scalar import summary as cs_summary
+
+    writer = tf.summary.create_file_writer(logdir)
+    with writer.as_default():
+        tf.summary.experimental.write_raw_pb(
+            cs_summary.pb(custom_scalars_layout()).SerializeToString(), step=0
+        )
+    writer.flush()
 
 
 # ---------- confusion matrix image for TensorBoard ----------

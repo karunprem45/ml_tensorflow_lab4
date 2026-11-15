@@ -38,7 +38,7 @@ jobs:
       - name: Check the results
         run: |
           python - <<'PY'
-          import json
+          import json, re
           nb = json.load(open("executed.ipynb"))
           text = ""
           for cell in nb["cells"]:
@@ -49,9 +49,13 @@ jobs:
           assert "Best config by CV macro F1" in text
           assert "Test macro F1" in text
           assert "final loss: nan" in text, "debugger run did not produce NaN"
-          assert "11 passed" in text, "unit tests inside the notebook did not all pass"
-          for line in text.splitlines():
-              if line.startswith(("Best config", "Test macro F1", "Test accuracy", "final loss")):
+          plain = re.sub(r"\x1b\[[0-9;]*m", "", text)  # drop pytest's colour codes
+          assert re.search(r"\d+ passed", plain), "unit tests inside the notebook did not run"
+          assert not re.search(r"\d+ (failed|error)", plain), "a unit test inside the notebook failed"
+          m = re.search(r"Early stopping ended (\d+) of (\d+) runs", plain)
+          assert m and int(m.group(1)) > 0, "early stopping never ended a run before the epoch limit"
+          for line in plain.splitlines():
+              if re.match(r"(Best config|Class weights,|Early stopping ended|Test macro F1|Test accuracy|final loss|=+ \d+ passed)", line):
                   print(line)
           PY
 

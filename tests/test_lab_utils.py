@@ -88,6 +88,56 @@ def test_confusion_matrix_figure_makes_png():
     assert png[:8] == b"\x89PNG\r\n\x1a\n"
 
 
+def test_balanced_class_weights_favour_rare_classes():
+    y = np.array([0] * 90 + [1] * 10)
+    w = lu.balanced_class_weights(y, n_classes=2)
+    assert w[1] > w[0]
+    # after weighting, each class carries the same total weight
+    assert 90 * w[0] == pytest.approx(10 * w[1])
+
+
+def test_balanced_class_weights_equal_classes_and_missing_class():
+    y = np.array([0, 0, 1, 1])
+    w = lu.balanced_class_weights(y, n_classes=3)
+    assert w[0] == pytest.approx(w[1])
+    assert w[2] == 1.0  # class 2 never appears
+
+
+def test_sqrt_weights_are_milder_than_balanced():
+    y = np.array([0] * 90 + [1] * 10)
+    full = lu.class_weights_for("balanced", y, 2)
+    sqrt = lu.class_weights_for("sqrt", y, 2)
+    assert full[1] > sqrt[1] > 1.0  # rare class boosted, but less with sqrt
+    assert sqrt[1] == pytest.approx(full[1] ** 0.5)
+    assert lu.class_weights_for("none", y, 2) is None
+    with pytest.raises(ValueError):
+        lu.class_weights_for("double", y, 2)
+
+
+# ---------- Custom Scalars layout (needs TensorBoard) ----------
+
+def test_custom_scalars_layout_covers_every_logged_tag():
+    pytest.importorskip("tensorboard")
+    import re
+
+    layout = lu.custom_scalars_layout()
+    regexes = [tag for cat in layout.category for chart in cat.chart for tag in chart.multiline.tag]
+    logged_tags = ["epoch_loss", "epoch_accuracy", "learning_rate", "val_macro_f1"]
+    # every logged tag lands in exactly one chart, and every chart shows something
+    for tag in logged_tags:
+        assert sum(bool(re.search(r, tag)) for r in regexes) == 1, tag
+    for r in regexes:
+        assert any(re.search(r, tag) for tag in logged_tags), r
+
+
+def test_write_custom_scalars_layout_creates_event_file(tmp_path):
+    pytest.importorskip("tensorflow")
+    lu.write_custom_scalars_layout(str(tmp_path))
+    files = list(tmp_path.glob("events.out.tfevents.*"))
+    assert len(files) == 1
+    assert b"custom_scalars" in files[0].read_bytes()
+
+
 # ---------- model (needs TensorFlow) ----------
 
 def test_build_model_output_shape_and_probabilities():
