@@ -142,6 +142,7 @@ The test macro F1 (0.6916) is close to the CV estimate (0.6708), so the CV score
 - `lab_utils.py` - data, model, class weights, Custom Scalars layout, selection and plotting helpers
 - `tests/test_lab_utils.py` - unit tests
 - `requirements.txt` - pinned Python package versions
+- `.gitignore` - keeps TensorBoard logs, debugger dumps, caches and local notebook outputs out of the repo
 - `.github/workflows/tests.yml` - runs the unit tests on Python 3.11 and 3.13 (the version Colab uses) on every push
 - `.github/workflows/notebook.yml` - runs the whole notebook top to bottom on Python 3.13 and checks the results, early stopping, the NaN debugger run and the in-notebook tests; the executed notebook and TensorBoard logs are saved as a download
 - `screenshots/` - TensorBoard screenshots from my run (the numbers above come from the same run)

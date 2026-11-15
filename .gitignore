@@ -1,0 +1,18 @@
+# TensorBoard logs and debugger dumps written by the notebook
+logs/
+
+# Python caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Notebook checkpoints and local outputs
+.ipynb_checkpoints/
+executed.ipynb
+
+# Virtual environments
+.venv/
+venv/
+
+# OS files
+.DS_Store
