@@ -53,7 +53,8 @@ I use a stratified sample of 20,000 rows so everything runs in about 10 minutes 
 - `requirements.txt` pins the exact versions used for the saved run (TensorFlow 2.21.0, Keras 3.15.1, scikit-learn 1.9.1, NumPy 2.4.6, pandas 3.1.1). CI installs the same pinned versions on Python 3.11 and 3.13.
 - All randomness is seeded (`keras.utils.set_random_seed(42)`, fixed seeds for the sample, the split and the folds), and the debugger run resets the seed before building its model.
 - `tf.config.experimental.enable_op_determinism()` makes TensorFlow use deterministic kernels. Without it, multi-threaded CPU maths can add numbers in a different order on each run: two CI runs of the same code gave test macro F1 0.6864 and 0.7137. With it, I ran the notebook twice and every number (all 15 folds, the CV table, the test report) came out identical.
-- Determinism holds on the same platform. A different CPU, OS or Python version can still change the later decimal places, so a Colab or CI run will not match the saved numbers digit for digit, but it picks the same config.
+- Determinism holds on the same platform. Two CI runs of the final code on Linux / Python 3.13 also came out identical to each other (CV macro F1 0.6857 ± 0.0043, test macro F1 0.7336, accuracy 0.8257).
+- A different CPU, OS or Python version still changes the later decimal places, which is why the Linux CI numbers differ from the saved Mac run (test macro F1 0.6916). Every platform picks the same config, Adam lr 0.01 with no class weights.
 - Colab uses its own preinstalled packages instead of `requirements.txt`. At the time of writing it has TensorFlow 2.21.0, the same version pinned here.
 
 To run the tests locally:
